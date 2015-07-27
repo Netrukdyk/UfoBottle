@@ -13,7 +13,7 @@ public class UfoBottle extends Application {
     private Map<String, Integer> data;
     public static String lang = "en"; // default language
 
-    private static Context context;    
+    private static Context context;
     public void onCreate(){
         super.onCreate();
         UfoBottle.context = getApplicationContext();
@@ -24,13 +24,13 @@ public class UfoBottle extends Application {
     }
     
     public UfoBottle(){
-    	prepareCodes(999);
+    	prepareCodes(30000);
     }
     
     public int getData(String key) {
     	if(key.equals("reset ")) {
     		Log.v("getData",key);
-    		prepareCodes(999);
+    		prepareCodes(30000);
     		return -2;
     	}
 		return (data.get(key) != null) ? data.get(key) : -1;

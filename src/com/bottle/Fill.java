@@ -60,7 +60,7 @@ public class Fill extends Activity implements OnClickListener {
 		if (butLiko <= 0) {
 			if(butLiko == -2){ // -2 = reset
 				Log.v("Fill", "Reset OK");
-				startActivity(new Intent(Fill.this, Main.class));			
+				startActivity(new Intent(Fill.this, Main.class));
 			} else { // -1 = nëra duomenø bazëje
 				// klaida nëra duomenø bazëje
 				Log.v("Fill", butKodas + " - nëra duomenø bazëje");
@@ -139,6 +139,9 @@ public class Fill extends Activity implements OnClickListener {
 					break;
 				case 2 :
 					serverStatus.setText(msg.getData().getString("message") + "\n");
+					klaida = true;
+					fill.setEnabled(true);
+					startActivity(new Intent(Fill.this, ErrorDevice.class));
 					break;
 				case 3 :
 					if (msg.getData().getString("message") == "Enable BT") {

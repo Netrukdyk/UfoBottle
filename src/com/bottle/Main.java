@@ -94,9 +94,9 @@ public class Main extends Activity implements OnClickListener {
 	private void setLanguage(String lang){
 		UfoBottle.lang = lang;
 		Log.v("Language",lang);
-		Locale myLocale = new Locale(lang); 
+		Locale myLocale = new Locale(lang);
 	    Resources res = getResources(); 
-	    DisplayMetrics dm = res.getDisplayMetrics(); 
+	    DisplayMetrics dm = res.getDisplayMetrics();
 	    Configuration conf = res.getConfiguration(); 
 	    conf.locale = myLocale; 
 	    res.updateConfiguration(conf, dm); 
