@@ -59,10 +59,8 @@ public class ServiceBluetooth extends IntentService {
 					break;
 				}
 
-			if (mDevice != null){
+			if (mDevice != null)
 				connectToDevice(mDevice);
-				Log.v("BT", "Found. Connecting...");
-			}
 			else {
 				stopSelf();
 				return;
@@ -105,16 +103,22 @@ public class ServiceBluetooth extends IntentService {
 
 		setState(STATE_CONNECTED);
 		Log.v("BT", "Connected");
+		toast("Connected");
 
 	}
 
 	private void setState(int state) {
 		ServiceBluetooth.mState = state;
+		Log.v("BT", String.valueOf(state));		
 		// if (mHandler != null) {
 		// mHandler.obtainMessage(AbstractActivity.MESSAGE_STATE_CHANGE, state,
 		// -1).sendToTarget();
 		// }
 	}
+	private void toast(String text){
+		Toast.makeText(this, text, Toast.LENGTH_SHORT).show();	
+	}
+	
 
 	private class ConnectThread extends Thread {
 		private final BluetoothSocket mmSocket;
@@ -135,11 +139,14 @@ public class ServiceBluetooth extends IntentService {
 			try {
 				// Connect the device through the socket. This will block
 				// until it succeeds or throws an exception
+				Log.v("BT", "Try to connect");
 				mmSocket.connect();
+				
 			} catch (IOException connectException) {
 				// Unable to connect; close the socket and get out
 				try {
 					mmSocket.close();
+					Log.v("BT", "Socket closed");
 				} catch (IOException closeException) {
 				}
 				return;
