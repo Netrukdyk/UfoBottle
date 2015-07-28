@@ -23,7 +23,6 @@ import android.widget.VideoView;
 public class Fill extends Activity implements OnClickListener {
 	TextView serverStatus, info;
 	Button home, fill, back;
-	private BTConnection bt;
 	Handler serverHandler;
 	String butKodas;
 	int butLiko;
@@ -70,18 +69,12 @@ public class Fill extends Activity implements OnClickListener {
 			info.setText(getString(R.string.bottle)+": "+ butKodas + "\n"
 							+ getString(R.string.leftfills) + ": " + butLiko);
 		}
-
+		
 		playVideo2();
-
-		bt = new BTConnection(uiHandler); // sukuria bluetooth serverá
-		bt.start();
-		serverHandler = bt.getHandler(); // gaunam serverio handlerá, per kurá
-											// siøsim þinutes serveriui
 	}
 
 	@Override
 	protected void onStart() {
-		// TODO Auto-generated method stub
 		super.onStart();
 		videoView2.start();
 	}
@@ -123,8 +116,8 @@ public class Fill extends Activity implements OnClickListener {
 						// sendToServer(1, "close");
 						klaida = true;
 						fill.setEnabled(true);
+						sendToServer(1, "close");
 						startActivity(new Intent(Fill.this, ErrorDevice.class));
-						return;
 					}
 					// jei buteliukas pripiltas (-1)
 					if (temp != null && temp.contains("complete: BOTTLE_DETACH") && !klaida) {
@@ -139,9 +132,9 @@ public class Fill extends Activity implements OnClickListener {
 					break;
 				case 2 :
 					serverStatus.setText(msg.getData().getString("message") + "\n");
-					klaida = true;
+//					klaida = true;
 					fill.setEnabled(true);
-					startActivity(new Intent(Fill.this, ErrorDevice.class));
+//					startActivity(new Intent(Fill.this, ErrorDevice.class));
 					break;
 				case 3 :
 					if (msg.getData().getString("message") == "Enable BT") {
@@ -155,12 +148,6 @@ public class Fill extends Activity implements OnClickListener {
 
 	// suformuoja praneðimà ir iðsiunèia serveriui
 	private void sendToServer(int what, String msgText) {
-		Bundle b = new Bundle();
-		b.putString("command", msgText);
-		Message msg = new Message();
-		msg.what = what;
-		msg.setData(b);
-		serverHandler.sendMessage(msg);
 	}
 
 	@Override

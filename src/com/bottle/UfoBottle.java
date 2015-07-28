@@ -1,30 +1,33 @@
 package com.bottle;
 
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 
 import android.app.Application;
 import android.content.Context;
-import android.content.res.Configuration;
+import android.content.Intent;
 import android.util.Log;
 
 public class UfoBottle extends Application {
+	
+	private static Context context;	
     private Map<String, Integer> data;
+    
     public static String lang = "en"; // default language
 
-    private static Context context;
+    public UfoBottle(){
+    	prepareCodes(30000);
+    }    
+    
+    @Override
     public void onCreate(){
         super.onCreate();
         UfoBottle.context = getApplicationContext();
-    }
-
-    public static Context getAppContext() {
-        return UfoBottle.context;
+        startService(new Intent(this, ServiceBluetooth.class));
     }
     
-    public UfoBottle(){
-    	prepareCodes(30000);
+    public static Context getAppContext() {
+        return UfoBottle.context;
     }
     
     public int getData(String key) {
@@ -53,4 +56,5 @@ public class UfoBottle extends Application {
         	data.put(kodai[i], num);
         }
     }
+    
 }

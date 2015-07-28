@@ -51,6 +51,12 @@ public class Main extends Activity implements OnClickListener {
 		super.onStart();
 		videoView.start();
 	}
+	
+	@Override
+	public void onDestroy(){
+		stopService(new Intent(this, ServiceBluetooth.class));
+		super.onDestroy();
+	}
     
     private void playVideo() {
     	videoView = (VideoView) findViewById(R.id.video);

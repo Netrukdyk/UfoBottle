@@ -60,7 +60,6 @@ public class BTConnection extends Thread {
 						break;
 					}
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
@@ -85,13 +84,12 @@ public class BTConnection extends Thread {
 																				// ID
 		if (mmDevice !=null & mmDevice.getBondState()== BluetoothDevice.BOND_BONDED) {
 			try {
-				if (mmSocket != null)
-					mmSocket = null;
-
+				if (mmSocket != null) mmSocket.close();
 				mmSocket = mmDevice.createRfcommSocketToServiceRecord(uuid);
 			} catch (IOException e1) {
 				Log.d("Bluetooth", "socket not created");
 				e1.printStackTrace();
+				return;
 			}
 			
 			try {
@@ -100,9 +98,9 @@ public class BTConnection extends Thread {
 				mmInputStream = mmSocket.getInputStream();
 			} catch (IOException e) {
 				try {
-					mmSocket.close();
 	                Log.d("Bluetooth","Cannot connect");
-	                sendToUI(2, "햢yko klaida");
+	                sendToUI(2, e.getMessage());
+	                closeBT();
 	            } catch (IOException e1) {
 	                Log.d("Bluetooth","Socket not closed");
 	                e1.printStackTrace();
@@ -113,6 +111,7 @@ public class BTConnection extends Thread {
 			}
 			server_state = 1;
 			Log.v("Bluetooth", "Connected");
+			sendToUI(2, "Bluetooth connected");
 			
 		} else {
 			Log.v("Bluetooth", "No bounded device");
@@ -120,7 +119,6 @@ public class BTConnection extends Thread {
 	}
 
 	private void findBT() {
-
 		mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 		if (mBluetoothAdapter == null) {
 			Log.v("Bluetooth", "BT adapter not found");
@@ -206,9 +204,9 @@ public class BTConnection extends Thread {
 						mmOutputStream.write(msg.getBytes());
 						sendToUI(2, "Data Sent");
 					} else
-						sendToUI(2, "햢yko klaida");
+						sendToUI(2, "햢yko klaida. No output stream");
 				} catch (IOException e) {
-					sendToUI(2, "햢yko klaida");
+					sendToUI(2, "햢yko klaida. IOException");
 					e.printStackTrace();
 				}
 			}

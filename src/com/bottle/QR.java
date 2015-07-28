@@ -14,7 +14,6 @@ import net.sourceforge.zbar.Symbol;
 import net.sourceforge.zbar.SymbolSet;
 import android.app.Activity;
 import android.content.Intent;
-import android.content.res.Configuration;
 import android.hardware.Camera;
 import android.hardware.Camera.AutoFocusCallback;
 import android.hardware.Camera.CameraInfo;
@@ -31,8 +30,9 @@ import android.widget.FrameLayout;
 
 import com.bottle.R;
 
+@SuppressWarnings("deprecation")
 public class QR extends Activity implements OnClickListener {
-    public final static String EXTRA_MESSAGE = ".message";
+    public final static String EXTRA_MESSAGE = "message";
 
 	private Button home;
 	

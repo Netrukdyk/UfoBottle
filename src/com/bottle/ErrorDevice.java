@@ -34,7 +34,7 @@ public class ErrorDevice extends Activity implements OnClickListener{
 	            startActivity(new Intent(ErrorDevice.this, Main.class));
 	        	break;
 	        case R.id.backerror:
-	        	finish();      	
+	        	finish();
 	        	break;
         	
 		}
