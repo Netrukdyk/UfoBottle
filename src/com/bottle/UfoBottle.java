@@ -30,11 +30,16 @@ public class UfoBottle extends Application {
     }
     
     public int getData(String key) {
-    	if(key.equals("reset ")) {
-    		Log.v("getData",key);
+    	Log.v("getData",key);
+    	if(key.equals("reset")) {    		
     		prepareCodes(30000);
     		return -2;
     	}
+    	if(key.equals("exit")) {
+    		Log.v("getData","KILL");
+    		//android.os.Process.killProcess(android.os.Process.myPid());
+    		return -3;
+    	}    	
 		return (data.get(key) != null) ? data.get(key) : -1;
     }
     

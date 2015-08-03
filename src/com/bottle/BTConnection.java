@@ -51,7 +51,7 @@ public class BTConnection extends Thread {
 		@Override
 		public void handleMessage(Message msg) {
 			if (msg.what == 1) {
-				Log.v("Server", msg.getData().getString("command"));
+				//Log.v("Server", msg.getData().getString("command"));
 				try {
 					switch (msg.getData().getString("command")) {
 					case "start":
@@ -68,26 +68,39 @@ public class BTConnection extends Thread {
 		}
 	};
 
-	private boolean setBluetooth(boolean enable) {
-		boolean isEnabled = mBluetoothAdapter.isEnabled();
-		if (enable && !isEnabled) {
-			return mBluetoothAdapter.enable();
-		} else if (!enable && isEnabled) {
-			return mBluetoothAdapter.disable();
+	private void findBT() {
+		mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+		if (mBluetoothAdapter == null) {
+			Log.v("Bluetooth", "BT adapter not found");
+			sendToUI(2, "No bluetooth adapter available");
+			return;
 		}
-		// No need to change bluetooth state
-		return true;
+
+		setBluetooth(true);
+
+		Log.v("Bluetooth", "Looking for paired device...");
+		Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
+		if (pairedDevices.size() > 0) {
+			for (BluetoothDevice device : pairedDevices) {
+				if (device.getName().equals("RepRap")) {
+					mmDevice = device;
+					mBluetoothAdapter.cancelDiscovery();
+					return;
+				}
+			}
+		}
 	}
 
 	private void connect() {
 		server_state = 0;
-		UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb"); // Standard
-																				// SerialPortService
-																				// ID
+		UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
+		
 		if (mmDevice !=null & mmDevice.getBondState()== BluetoothDevice.BOND_BONDED) {
 			try {
-				if (mmSocket != null) mmSocket.close();
-				mmSocket = mmDevice.createRfcommSocketToServiceRecord(uuid);
+				if (mmSocket != null) {mmSocket.close(); mmSocket =null;}
+				mmSocket = mmDevice.createInsecureRfcommSocketToServiceRecord(uuid);
+				//mmSocket = (BluetoothSocket) mmDevice.getClass().getMethod("createRfcommSocket", new Class[] {int.class}).invoke(mmDevice,1);
+
 			} catch (IOException e1) {
 				Log.d("Bluetooth", "socket not created");
 				e1.printStackTrace();
@@ -95,15 +108,18 @@ public class BTConnection extends Thread {
 			}
 			
 			try {
+				Log.v("BT", mmSocket.isConnected()+"");
 				mmSocket.connect();
 				mmOutputStream = mmSocket.getOutputStream();
 				mmInputStream = mmSocket.getInputStream();
 			} catch (IOException e) {
 				try {
 	                Log.d("Bluetooth","Cannot connect");
-	                sendToUI(2, e.getMessage());
 	                closeBT();
-	            } catch (IOException e1) {
+	                sleep(1000);
+	                sendToUI(2, e.getMessage());
+	                
+	            } catch (IOException | InterruptedException e1) {
 	                Log.d("Bluetooth","Socket not closed");
 	                e1.printStackTrace();
 	            }
@@ -120,29 +136,6 @@ public class BTConnection extends Thread {
 		}
 	}
 
-	private void findBT() {
-		mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-		if (mBluetoothAdapter == null) {
-			Log.v("Bluetooth", "BT adapter not found");
-			sendToUI(2, "No bluetooth adapter available");
-		} else if (!mBluetoothAdapter.isEnabled()) {
-			// sendToUI(3,"Enable bluetooth");
-			Log.v("Bluetooth", "BT disabled");
-			setBluetooth(true);
-		} else {
-			Log.v("Bluetooth", "Looking for paired device...");
-			Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
-			if (pairedDevices.size() > 0) {
-				for (BluetoothDevice device : pairedDevices) {
-					if (device.getName().equals("RepRap")) {
-						mmDevice = device;
-						break;
-					}
-				}
-			}
-		}
-	}
-
 	public void run() {
 		Looper.prepare();
 
@@ -153,8 +146,7 @@ public class BTConnection extends Thread {
 		while (server_state != 1);
 
 		final Handler handler = new Handler();
-		final byte delimiter = 10; // This is the ASCII code for a newline
-									// character
+		final byte delimiter = 10; // This is the ASCII newline character
 
 		stopWorker = false;
 		readBufferPosition = 0;
@@ -177,7 +169,7 @@ public class BTConnection extends Thread {
 
 									handler.post(new Runnable() {
 										public void run() {
-											Log.v("server to UI", data);
+											Log.v("Water Station", data);
 											sendToUI(0, data);
 										}
 									});
@@ -204,6 +196,7 @@ public class BTConnection extends Thread {
 				try {
 					if (mmOutputStream != null) {
 						mmOutputStream.write(msg.getBytes());
+						Log.v("Command", "start");
 						sendToUI(2, "Data Sent");
 					} else
 						sendToUI(2, "Ávyko klaida. No output stream");
@@ -217,6 +210,7 @@ public class BTConnection extends Thread {
 	}
 
 	private void closeBT() throws IOException {
+		Log.v("BT", "close");
 		stopWorker = true;
 		if (mmOutputStream != null)
 			mmOutputStream.close();
@@ -242,5 +236,15 @@ public class BTConnection extends Thread {
 		msg.setData(b);
 		uiHandler.sendMessage(msg);
 	}
-
+	
+	private boolean setBluetooth(boolean enable) {
+		boolean isEnabled = mBluetoothAdapter.isEnabled();
+		if (enable && !isEnabled) {
+			return mBluetoothAdapter.enable();
+		} else if (!enable && isEnabled) {
+			return mBluetoothAdapter.disable();
+		}
+		// No need to change bluetooth state
+		return true;
+	}
 } // End of BTConnection

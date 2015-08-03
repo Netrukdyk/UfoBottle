@@ -53,7 +53,6 @@ public class Main extends Activity implements OnClickListener {
 	
 	@Override
 	public void onDestroy(){
-		stopService(new Intent(this, ServiceBluetooth.class));
 		super.onDestroy();
 	}
     
