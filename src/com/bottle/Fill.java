@@ -29,6 +29,8 @@ public class Fill extends Activity implements OnClickListener {
 	UfoBottle app;
 	Boolean klaida;
 	VideoView videoView2;
+	
+    private BTConnection bt;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -77,6 +79,11 @@ public class Fill extends Activity implements OnClickListener {
 	protected void onStart() {
 		super.onStart();
 		videoView2.start();
+        
+		bt = new BTConnection();
+		bt.sethandler(uiHandler);
+        serverHandler = bt.getHandler();
+        bt.start();
 	}
 
 	private void playVideo2() {
@@ -148,6 +155,12 @@ public class Fill extends Activity implements OnClickListener {
 
 	// suformuoja praneðimà ir iðsiunèia serveriui
 	private void sendToServer(int what, String msgText) {
+		Bundle b = new Bundle();
+		b.putString("command", msgText);
+		Message msg = new Message();
+		msg.what = what;
+		msg.setData(b);
+		serverHandler.sendMessage(msg);		
 	}
 
 	@Override

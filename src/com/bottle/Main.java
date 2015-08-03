@@ -47,9 +47,8 @@ public class Main extends Activity implements OnClickListener {
 	
 	@Override
 	protected void onStart() {
-		// TODO Auto-generated method stub
 		super.onStart();
-		videoView.start();
+//		videoView.start();
 	}
 	
 	@Override
@@ -65,13 +64,14 @@ public class Main extends Activity implements OnClickListener {
             @Override
             public void onPrepared(MediaPlayer mp) {
                 mp.setLooping(true);
+                videoView.start();
             }
         });
     	videoView.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             public void onCompletion(MediaPlayer mp) {
-                    mp.reset();
-                    videoView.setVideoPath("/sdcard/media/out.mp4");
-                    videoView.start();
+                    //mp.reset();
+                    //videoView.setVideoPath("/sdcard/media/out.mp4");
+                    videoView.resume();
             }
         });
         MediaController mediaController = new MediaController(this);

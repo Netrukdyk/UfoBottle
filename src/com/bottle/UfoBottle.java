@@ -5,12 +5,11 @@ import java.util.Map;
 
 import android.app.Application;
 import android.content.Context;
-import android.content.Intent;
 import android.util.Log;
 
 public class UfoBottle extends Application {
 	
-	private static Context context;	
+	private static Context context;
     private Map<String, Integer> data;
     
     public static String lang = "en"; // default language
@@ -23,7 +22,7 @@ public class UfoBottle extends Application {
     public void onCreate(){
         super.onCreate();
         UfoBottle.context = getApplicationContext();
-        startService(new Intent(this, ServiceBluetooth.class));
+        //startService(new Intent(this, ServiceBluetooth.class));        
     }
     
     public static Context getAppContext() {

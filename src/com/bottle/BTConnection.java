@@ -39,9 +39,11 @@ public class BTConnection extends Thread {
 
 	int server_state = 0;
 
-	public BTConnection(Handler h) {
+	public BTConnection() {}
+	
+	public void sethandler(Handler h) {
 		this.uiHandler = h;
-	}
+	}	
 
 	// Serverio Handleris, apdoroja þinutes ið UI
 	@SuppressLint("HandlerLeak")

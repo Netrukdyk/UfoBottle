@@ -103,20 +103,19 @@ public class ServiceBluetooth extends IntentService {
 
 		setState(STATE_CONNECTED);
 		Log.v("BT", "Connected");
-		toast("Connected");
-
+		mConnectedThread.write("start".getBytes());
 	}
 
 	private void setState(int state) {
 		ServiceBluetooth.mState = state;
-		Log.v("BT", String.valueOf(state));		
+		Log.v("BT", String.valueOf(state));
 		// if (mHandler != null) {
 		// mHandler.obtainMessage(AbstractActivity.MESSAGE_STATE_CHANGE, state,
 		// -1).sendToTarget();
 		// }
 	}
 	private void toast(String text){
-		Toast.makeText(this, text, Toast.LENGTH_SHORT).show();	
+		Toast.makeText(this, text, Toast.LENGTH_SHORT).show();
 	}
 	
 
