@@ -72,7 +72,6 @@
 	    android:layout_margin="10dp"
 	    android:background="@color/black_overlay"
 	    android:gravity="center_horizontal"
-	    android:text="Buteliukas: 99999\nLiko užpildymų: 999"
 	    android:textColor="@android:color/primary_text_dark"
 	    android:textSize="44sp" />
 
@@ -176,11 +175,16 @@
         android:id="@+id/thanks"
         android:layout_width="700dp"
         android:layout_height="fill_parent"
+        android:layout_marginBottom="100dp"
+        android:layout_marginLeft="20dp"
+        android:layout_marginTop="100dp"
+        android:background="@color/black_overlay"
         android:gravity="center"
         android:text="@string/thanks"
         android:textColor="@android:color/primary_text_dark"
         android:textSize="45sp"
         android:typeface="monospace" />
+
     <RelativeLayout
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"

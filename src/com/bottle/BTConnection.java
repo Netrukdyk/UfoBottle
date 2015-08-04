@@ -39,11 +39,12 @@ public class BTConnection extends Thread {
 
 	int server_state = 0;
 
-	public BTConnection() {}
-	
+	public BTConnection() {
+	}
+
 	public void sethandler(Handler h) {
 		this.uiHandler = h;
-	}	
+	}
 
 	// Serverio Handleris, apdoroja þinutes ið UI
 	@SuppressLint("HandlerLeak")
@@ -51,7 +52,7 @@ public class BTConnection extends Thread {
 		@Override
 		public void handleMessage(Message msg) {
 			if (msg.what == 1) {
-				//Log.v("Server", msg.getData().getString("command"));
+				// Log.v("Server", msg.getData().getString("command"));
 				try {
 					switch (msg.getData().getString("command")) {
 					case "start":
@@ -94,43 +95,47 @@ public class BTConnection extends Thread {
 	private void connect() {
 		server_state = 0;
 		UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
-		
-		if (mmDevice !=null & mmDevice.getBondState()== BluetoothDevice.BOND_BONDED) {
+
+		if (mmDevice != null & mmDevice.getBondState() == BluetoothDevice.BOND_BONDED) {
 			try {
-				if (mmSocket != null) {mmSocket.close(); mmSocket =null;}
+				if (mmSocket != null) {
+					mmSocket.close();
+					mmSocket = null;
+				}
 				mmSocket = mmDevice.createInsecureRfcommSocketToServiceRecord(uuid);
-				//mmSocket = (BluetoothSocket) mmDevice.getClass().getMethod("createRfcommSocket", new Class[] {int.class}).invoke(mmDevice,1);
+				// mmSocket = (BluetoothSocket)
+				// mmDevice.getClass().getMethod("createRfcommSocket", new
+				// Class[] {int.class}).invoke(mmDevice,1);
 
 			} catch (IOException e1) {
 				Log.d("Bluetooth", "socket not created");
 				e1.printStackTrace();
 				return;
 			}
-			
+
 			try {
-				Log.v("BT", mmSocket.isConnected()+"");
+				// Log.v("BT", mmSocket.isConnected()+"");
 				mmSocket.connect();
 				mmOutputStream = mmSocket.getOutputStream();
 				mmInputStream = mmSocket.getInputStream();
 			} catch (IOException e) {
 				try {
-	                Log.d("Bluetooth","Cannot connect");
-	                closeBT();
-	                sleep(1000);
-	                sendToUI(2, e.getMessage());
-	                
-	            } catch (IOException | InterruptedException e1) {
-	                Log.d("Bluetooth","Socket not closed");
-	                e1.printStackTrace();
-	            }
+					Log.d("Bluetooth", "Socket cannot connect");
+					closeBT();
+					sleep(2000);
+				} catch (IOException | InterruptedException e1) {
+					Log.d("Bluetooth", "Socket not closed");
+					e1.printStackTrace();
+				}
 				e.printStackTrace();
-				return; // kai ávyksta klaida reikia nutraukti metodà, nes vëliau
+				return; // kai ávyksta klaida reikia nutraukti metodà, nes
+						// vëliau
 						// nustatoma teigiama serverio bûsena
 			}
 			server_state = 1;
 			Log.v("Bluetooth", "Connected");
 			sendToUI(2, "Bluetooth connected");
-			
+
 		} else {
 			Log.v("Bluetooth", "No bounded device");
 		}
@@ -194,14 +199,20 @@ public class BTConnection extends Thread {
 			public void run() {
 				String msg = "start\n";
 				try {
+					while (server_state != 1) {
+						sleep(200);
+					}
+
 					if (mmOutputStream != null) {
 						mmOutputStream.write(msg.getBytes());
 						Log.v("Command", "start");
 						sendToUI(2, "Data Sent");
-					} else
-						sendToUI(2, "Ávyko klaida. No output stream");
-				} catch (IOException e) {
-					sendToUI(2, "Ávyko klaida. IOException");
+					} else{
+						Log.v("Bluetooth", "No output stream");
+						sendToUI(3, "Bluetooth error");
+					}
+				} catch (IOException | InterruptedException e) {
+					sendToUI(2, "Ávyko klaida. IOException | Interupted");
 					e.printStackTrace();
 				}
 			}
@@ -210,7 +221,6 @@ public class BTConnection extends Thread {
 	}
 
 	private void closeBT() throws IOException {
-		Log.v("BT", "close");
 		stopWorker = true;
 		if (mmOutputStream != null)
 			mmOutputStream.close();
@@ -218,8 +228,9 @@ public class BTConnection extends Thread {
 			mmInputStream.close();
 		if (mmSocket != null)
 			mmSocket.close();
-		sendToUI(2, "Bluetooth Closed");
+		sendToUI(2, "Bluetooth Closed");		
 		server_state = 0;
+		Log.v("Bluetooth", "Closed");
 	}
 
 	// Metodas tam, kad gautume serverio handlerá
@@ -236,7 +247,7 @@ public class BTConnection extends Thread {
 		msg.setData(b);
 		uiHandler.sendMessage(msg);
 	}
-	
+
 	private boolean setBluetooth(boolean enable) {
 		boolean isEnabled = mBluetoothAdapter.isEnabled();
 		if (enable && !isEnabled) {

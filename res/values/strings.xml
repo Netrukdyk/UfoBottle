@@ -18,7 +18,12 @@
     <string name="eNoData">Such code doen\'t exist in database.</string>
     <string name="english">English</string>
     <string name="lithuanian">Lietuviškai</string>
-	<string name="instruction">Unscrew stopper,\ninsert bottle\nand press \"Fill\"</string>
-	<string name="bottle">Bottle</string>
-	<string name="leftfills">Fills left</string>
+    <string name="instruction">Unscrew stopper,\ninsert bottle\nand press \"Fill\"</string>
+    <string name="bottle">Bottle</string>
+    <string name="leftfills">Fills left</string>
+    <string name="title_activity_activity_god">God Mode</string>
+    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
+    <string name="title_activity_god">God</string>
+
 </resources>

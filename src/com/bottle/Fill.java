@@ -20,6 +20,7 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.MediaController;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.VideoView;
 
 @SuppressLint("SdCardPath")
@@ -32,10 +33,10 @@ public class Fill extends Activity implements OnClickListener {
 	UfoBottle app;
 	Boolean klaida;
 	VideoView videoView2;
-	
+
 	LinearLayout dev_error_layout, db_error_layout, success;
-	
-    private BTConnection bt;
+
+	private BTConnection bt;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -45,52 +46,63 @@ public class Fill extends Activity implements OnClickListener {
 		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 		setContentView(R.layout.activity_fill);
 
+		bt = new BTConnection();
+		bt.sethandler(uiHandler);
+		serverHandler = bt.getHandler();
+		bt.start();
+
 		serverStatus = (TextView) findViewById(R.id.serverStatus); // debug
 		info = (TextView) findViewById(R.id.info);
 
 		fill = (Button) findViewById(R.id.fill);
 		back = (Button) findViewById(R.id.back);
 		home = (Button) findViewById(R.id.home);
-		errorDevTryAgain = (Button)findViewById(R.id.try_again_dev);
-		errorDbTryAgain = (Button)findViewById(R.id.try_again_db);
-		successHome = (Button)findViewById(R.id.home_success);
-        
+		errorDevTryAgain = (Button) findViewById(R.id.try_again_dev);
+		errorDbTryAgain = (Button) findViewById(R.id.try_again_db);
+		successHome = (Button) findViewById(R.id.home_success);
+
 		fill.setOnClickListener(this);
 		back.setOnClickListener(this);
 		home.setOnClickListener(this);
 		errorDevTryAgain.setOnClickListener(this);
 		errorDbTryAgain.setOnClickListener(this);
 		successHome.setOnClickListener(this);
-		
+
 		dev_error_layout = (LinearLayout) findViewById(R.id.device_error);
 		db_error_layout = (LinearLayout) findViewById(R.id.database_error);
 		success = (LinearLayout) findViewById(R.id.success);
-		
+
 		butKodas = getIntent().getStringExtra(QR.EXTRA_MESSAGE);
 		app = (UfoBottle) UfoBottle.getAppContext();
 		butLiko = app.getData(butKodas);
-		Log.v("FillLiko",String.valueOf(butLiko));
+		
+		if(butKodas.equals("godmode")){
+			goGodMode();			
+		}
+		
+		Log.v("FillLiko", String.valueOf(butLiko));
 		if (butLiko <= 0) {
-			if(butLiko == -2){ // -2 = reset
+			if (butLiko == -2) { // -2 = reset
 				Log.v("Fill", "Reset OK");
-				startActivity(new Intent(Fill.this, Main.class));
-			} else if(butLiko == -3){ // -3 = exit
+				goHome();
+				Toast.makeText(getApplicationContext(), "Reset OK", Toast.LENGTH_SHORT).show();
+			} else if (butLiko == -3) { // -3 = exit
 				Log.v("Fill", "Exit OK");
-				//android.os.Process.killProcess(android.os.Process.myPid());
+				// android.os.Process.killProcess(android.os.Process.myPid());
+				Toast.makeText(getApplicationContext(), "Exit OK", Toast.LENGTH_SHORT).show();
 				finish();
 				Intent startMain = new Intent(Intent.ACTION_MAIN);
 				startMain.addCategory(Intent.CATEGORY_HOME);
 				startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-				startActivity(startMain);				
+				startActivity(startMain);
 			} else { // -1 = nëra duomenø bazëje
 				Log.v("Fill", butKodas + " - nëra duomenø bazëje");
 				setDbError(true);
 			}
 		} else {
-			info.setText(getString(R.string.bottle)+": "+ butKodas + "\n"
-							+ getString(R.string.leftfills) + ": " + butLiko);
+			info.setText(getString(R.string.bottle) + ": " + butKodas + "\n" + getString(R.string.leftfills) + ": " + butLiko);
 		}
-		
+
 		playVideo2();
 	}
 
@@ -98,11 +110,6 @@ public class Fill extends Activity implements OnClickListener {
 	protected void onStart() {
 		super.onStart();
 		videoView2.start();
-        
-		bt = new BTConnection();
-		bt.sethandler(uiHandler);
-        serverHandler = bt.getHandler();
-        bt.start();
 	}
 
 	private void playVideo2() {
@@ -134,32 +141,38 @@ public class Fill extends Activity implements OnClickListener {
 		@Override
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
-				case 0 :
-					String temp = msg.getData().getString("message");
-					//serverStatus.append(temp + "\n");
-					// jei serveris atsiuntë klaidà
-					if (temp.contains("error")) {
-						klaida = true;
-						fill.setEnabled(true);
-						setDevError(true);
-					}
-					// jei buteliukas pripiltas (-1)
-					if (temp != null && temp.contains("complete: BOTTLE_DETACH") && !klaida) {
-						Log.v("Fill", "Success");
-						app.setData(butKodas, butLiko - 1);
-						//sendToServer(1, "close");
-						klaida = false;
-						fill.setEnabled(true);
-						setSuccess(true);
-						return;
-					}
-					break;
-				case 2 :
-					//serverStatus.setText(msg.getData().getString("message") + "\n");
-//					klaida = true;
-					//fill.setEnabled(true);
-//					startActivity(new Intent(Fill.this, ErrorDevice.class));
-					break;
+			case 0:
+				String temp = msg.getData().getString("message");
+				// serverStatus.append(temp + "\n");
+				// jei serveris atsiuntë klaidà
+				if (temp.contains("error")) {
+					klaida = true;
+				}
+				
+				if (temp != null && temp.contains("complete: BOTTLE_DETACH") && klaida) {
+					setDevError(true);
+					fill.setEnabled(true);
+					klaida = false;
+					return;
+				}
+				// jei buteliukas pripiltas (-1)
+				if (temp != null && temp.contains("complete: BOTTLE_DETACH") && !klaida) {
+					Log.v("Fill", "Success");
+					app.setData(butKodas, butLiko - 1);
+					// sendToServer(1, "close");
+					klaida = false;					
+					setSuccess(true);
+					fill.setEnabled(true);
+					return;
+				}
+				break;
+			case 2:
+				// serverStatus.setText(msg.getData().getString("message") + "\n");
+				break;
+			case 3:
+				fill.setEnabled(true);
+				Log.v("FILL", "EXTRA 3 case" + msg.getData().getString("message"));
+				break;
 			}
 		};
 	};
@@ -171,59 +184,79 @@ public class Fill extends Activity implements OnClickListener {
 		Message msg = new Message();
 		msg.what = what;
 		msg.setData(b);
-		serverHandler.sendMessage(msg);		
+		serverHandler.sendMessage(msg);
 	}
 
 	@Override
 	public void onClick(View v) {
 		switch (v.getId()) {
-			case R.id.home :
-				goHome();
-				break;
-			case R.id.back :
-				sendToServer(1, "close");
-				startActivity(new Intent(Fill.this, QR.class));
-				break;
-			case R.id.fill :
-				klaida = false;
-				fill.setEnabled(false);// Disable "Pilti" mygtukà
-				sendToServer(1, "start");
-				break;
-	        case R.id.try_again_dev:
-	        	setDevError(false);
-	        	break;
-	        case R.id.try_again_db:
-	        	setDbError(false);
-	        	goHome();
-	        	break;
-	        case R.id.home_success:
-	        	setSuccess(false);
-	        	goHome();
-	        	break;	
+		case R.id.home:
+			goHome();
+			break;
+		case R.id.back:
+			goQR();
+			break;
+		case R.id.fill:
+			klaida = false;
+			fill.setEnabled(false);// Disable "Pilti" mygtukà
+			sendToServer(1, "start");
+			break;
+		case R.id.try_again_dev:
+			setDevError(false);
+			break;
+		case R.id.try_again_db:
+			goQR();
+			break;
+		case R.id.home_success:			
+			goHome();
+			break;
 		}
 	}
+
+	private void setDevError(Boolean enable) {
+		dev_error_layout.setVisibility((enable) ? LinearLayout.VISIBLE : LinearLayout.GONE);
+	}
+
+	private void setDbError(Boolean enable) {
+		db_error_layout.setVisibility((enable) ? LinearLayout.VISIBLE : LinearLayout.GONE);
+	}
+	Timer timer;
 	
-	private void setDevError(Boolean enable){			
-		dev_error_layout.setVisibility( (enable)? LinearLayout.VISIBLE : LinearLayout.GONE );
-	}
-	private void setDbError(Boolean enable){			
-		db_error_layout.setVisibility( (enable)? LinearLayout.VISIBLE : LinearLayout.GONE );
-	}
-	private void setSuccess(Boolean enable){			
-		success.setVisibility( (enable)? LinearLayout.VISIBLE : LinearLayout.GONE );
-		if(enable){
-	        new Timer().schedule(new TimerTask(){
-	            public void run() { 
-	                //startActivity(new Intent(Fill.this, Main.class));
-	            	goHome();
-	            }
-	        }, 15000 /*ms*/);
+	private void setSuccess(Boolean enable) {
+		success.setVisibility((enable) ? LinearLayout.VISIBLE : LinearLayout.GONE);
+		if (enable) {
+			this.timer = new Timer();
+			this.timer.schedule(new TimerTask() {
+				public void run() {
+					runOnUiThread(new Runnable() {
+					    public void run() {
+					    	goHome();
+					    }
+					});
+				}
+			}, 15000 /* ms */);
 		}
+	}
+	private void goHome() {
 		
-	}	
-	private void goHome(){
-		videoView2.stopPlayback();
+		if(this.timer != null) this.timer.cancel();
+		
+		if(videoView2 != null) videoView2.stopPlayback();
 		sendToServer(1, "close");
+		finish();
 		startActivity(new Intent(Fill.this, Main.class));
 	}
+
+	private void goQR() {
+		if(videoView2 != null) videoView2.stopPlayback();
+		sendToServer(1, "close");
+		finish();
+		startActivity(new Intent(Fill.this, QR.class));
+	}
+	private void goGodMode() {
+		if(videoView2 != null) videoView2.stopPlayback();
+		sendToServer(1, "close");
+		finish();
+		startActivity(new Intent(Fill.this, God.class));
+	}	
 }
