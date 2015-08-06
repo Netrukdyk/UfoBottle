@@ -17,8 +17,10 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.MediaController;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.VideoView;
@@ -35,7 +37,10 @@ public class Fill extends Activity implements OnClickListener {
 	VideoView videoView2;
 
 	LinearLayout dev_error_layout, db_error_layout, success;
-
+	RelativeLayout progress;
+	
+	ImageView[] steps = new ImageView [6];
+	
 	private BTConnection bt;
 
 	@Override
@@ -71,14 +76,18 @@ public class Fill extends Activity implements OnClickListener {
 		dev_error_layout = (LinearLayout) findViewById(R.id.device_error);
 		db_error_layout = (LinearLayout) findViewById(R.id.database_error);
 		success = (LinearLayout) findViewById(R.id.success);
+		
+		progress = (RelativeLayout)findViewById(R.id.progress);
+		steps[0] = (ImageView) findViewById(R.id.step1);
+		steps[1] = (ImageView) findViewById(R.id.step2);
+		steps[2] = (ImageView) findViewById(R.id.step3);
+		steps[3] = (ImageView) findViewById(R.id.step4);
+		steps[4] = (ImageView) findViewById(R.id.step5);
+		steps[5] = (ImageView) findViewById(R.id.step6);
 
 		butKodas = getIntent().getStringExtra(QR.EXTRA_MESSAGE);
 		app = (UfoBottle) UfoBottle.getAppContext();
 		butLiko = app.getData(butKodas);
-		
-		if(butKodas.equals("godmode")){
-			goGodMode();			
-		}
 		
 		Log.v("FillLiko", String.valueOf(butLiko));
 		if (butLiko <= 0) {
@@ -143,12 +152,20 @@ public class Fill extends Activity implements OnClickListener {
 			switch (msg.what) {
 			case 0:
 				String temp = msg.getData().getString("message");
+				
+				if (temp.contains("Cycle start"))					setStep(true, 0);
+				else if (temp.contains("start: BOTTLE_ATTACH"))		setStep(true, 1);
+				else if (temp.contains("complete: BOTTLE_ATTACH"))	setStep(true, 2);
+				else if (temp.contains("start: FILL_BOTTLE"))		setStep(true, 3);
+				else if (temp.contains("complete: FILL_BOTTLE"))	setStep(true, 4);
+				else if (temp.contains("start: BOTTLE_DETACH"))		setStep(true, 5);
+				else if (temp.contains("complete: BOTTLE_DETACH"))	setStep(true, 6);
+					
 				// serverStatus.append(temp + "\n");
 				// jei serveris atsiuntë klaidà
 				if (temp.contains("error")) {
 					klaida = true;
-				}
-				
+				}				
 				if (temp != null && temp.contains("complete: BOTTLE_DETACH") && klaida) {
 					setDevError(true);
 					fill.setEnabled(true);
@@ -237,6 +254,19 @@ public class Fill extends Activity implements OnClickListener {
 			}, 15000 /* ms */);
 		}
 	}
+	
+	private void setStep(Boolean enable, int step) {
+		progress.setVisibility((enable) ? RelativeLayout.VISIBLE : RelativeLayout.GONE);		
+		for (int i = 1; i <= 6; i++) {
+			if(i <= step){
+				steps[i-1].setImageDrawable(getResources().getDrawable(R.drawable.step_green));
+			} else {
+				steps[i-1].setImageDrawable(getResources().getDrawable(R.drawable.step));
+			}
+		}		
+	}
+	
+	
 	private void goHome() {
 		
 		if(this.timer != null) this.timer.cancel();
@@ -253,10 +283,4 @@ public class Fill extends Activity implements OnClickListener {
 		finish();
 		startActivity(new Intent(Fill.this, QR.class));
 	}
-	private void goGodMode() {
-		if(videoView2 != null) videoView2.stopPlayback();
-		sendToServer(1, "close");
-		finish();
-		startActivity(new Intent(Fill.this, God.class));
-	}	
 }

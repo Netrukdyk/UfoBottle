@@ -161,7 +161,7 @@
             android:textSize="35sp"
             android:typeface="monospace" />
     </RelativeLayout>
-</LinearLayout>	
+</LinearLayout>
 
 <LinearLayout
     android:id="@+id/success"
@@ -200,7 +200,77 @@
             android:textColor="@android:color/primary_text_dark"
             android:textSize="35sp"
             android:typeface="monospace" />
+
         </RelativeLayout>
+
 </LinearLayout>
+
+<RelativeLayout
+    android:id="@+id/progress"
+    android:layout_width="600dp"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center_vertical"
+    android:layout_margin="10dp"
+    android:background="@color/black_overlay"
+    android:gravity="center"
+    android:paddingBottom="20dp"
+    android:paddingTop="20dp" >
+
+    <TextView
+        android:id="@+id/labelFilling"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginBottom="10dp"
+        android:gravity="center_horizontal"
+        android:text="Filling..."
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:textSize="36sp" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/labelFilling"
+        android:layout_centerHorizontal="true" >
+
+        <ImageView
+            android:id="@+id/step1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/step" />
+
+        <ImageView
+            android:id="@+id/step2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/step" />
+
+        <ImageView
+            android:id="@+id/step3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/step" />
+
+        <ImageView
+            android:id="@+id/step4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/step" />
+
+        <ImageView
+            android:id="@+id/step5"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/step" />
+
+        <ImageView
+            android:id="@+id/step6"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/step" />
+    </LinearLayout>
+
+</RelativeLayout>
 
 </FrameLayout>
