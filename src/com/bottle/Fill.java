@@ -170,6 +170,7 @@ public class Fill extends Activity implements OnClickListener {
 					setDevError(true);
 					fill.setEnabled(true);
 					klaida = false;
+					setStep(false, 0);
 					return;
 				}
 				// jei buteliukas pripiltas (-1)
@@ -178,8 +179,9 @@ public class Fill extends Activity implements OnClickListener {
 					app.setData(butKodas, butLiko - 1);
 					// sendToServer(1, "close");
 					klaida = false;					
-					setSuccess(true);
+					setSuccess(true);					
 					fill.setEnabled(true);
+					setStep(false, 0);
 					return;
 				}
 				break;
