@@ -190,6 +190,7 @@ public class Fill extends Activity implements OnClickListener {
 				break;
 			case 3:
 				fill.setEnabled(true);
+				setStep(false, 0);
 				Log.v("FILL", "EXTRA 3 case" + msg.getData().getString("message"));
 				break;
 			}
