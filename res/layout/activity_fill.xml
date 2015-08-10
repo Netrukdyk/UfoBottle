@@ -213,8 +213,8 @@
     android:layout_margin="10dp"
     android:background="@color/black_overlay"
     android:gravity="center"
-    android:paddingBottom="20dp"
-    android:paddingTop="20dp" >
+    android:paddingBottom="40dp"
+    android:paddingTop="40dp" >
 
     <TextView
         android:id="@+id/labelFilling"
