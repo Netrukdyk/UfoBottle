@@ -246,7 +246,7 @@
         android:layout_alignParentRight="true"
         android:layout_marginBottom="30dp"
         android:gravity="center_horizontal"
-        android:text="Filling..."
+        android:text="@string/filling"
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:textSize="64sp" />
 
