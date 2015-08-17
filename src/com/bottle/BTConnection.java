@@ -1,8 +1,8 @@
-/* Handleri¯ naudojami praneim¯ kodai: 
- * 0 - Valdomo ·renginio praneimai
- * 1 - Valdymo komandos i UI
- * 2 - Bluetooth ryio praneimai
- * 3 - Kiti praneimai
+/* Handleri≈≥ naudojami prane≈°im≈≥ kodai: 
+ * 0 - Valdomo ƒØrenginio prane≈°imai
+ * 1 - Valdymo komandos i≈° UI
+ * 2 - Bluetooth ry≈°io prane≈°imai
+ * 3 - Kiti prane≈°imai
  */
 package com.bottle;
 
@@ -35,18 +35,14 @@ public class BTConnection extends Thread {
 	int counter;
 	volatile boolean stopWorker;
 
-	private Handler uiHandler; // UI Handleris
-
 	int server_state = 0;
+	private Handler uiHandler;
 
-	public BTConnection() {
+	public void sethandler(Handler uiHandler) {
+		this.uiHandler = uiHandler;		
 	}
 
-	public void sethandler(Handler h) {
-		this.uiHandler = h;
-	}
-
-	// Serverio Handleris, apdoroja ˛inutes i UI
+	// Serverio Handleris, apdoroja ≈æinutes i≈° UI
 	@SuppressLint("HandlerLeak")
 	private Handler serverHandler = new Handler() {
 		@Override
@@ -65,9 +61,125 @@ public class BTConnection extends Thread {
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
+			} else if(msg.what == 4){
+				try {		
+					String temp = msg.getData().getString("command");
+					Log.v("BT 4 command",temp);
+					if(temp.contains("GetWaterUnits")){
+						sendGetWawterUnits();
+					}
+					else if(temp.contains("SetWaterUnits"))
+						changeUnits(temp);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
+			
 		}
 	};
+
+	private void sendData() throws IOException {
+		final Runnable r = new Runnable() {
+			public void run() {
+				String msg = "start\n";
+				try {
+					while (server_state != 1) {
+						sleep(200);
+					}
+
+					if (mmOutputStream != null) {
+						mmOutputStream.write(msg.getBytes());
+						Log.v("Command", "start");
+						sendToUI(2, "Data Sent");
+					} else {
+						Log.v("Bluetooth", "No output stream");
+						sendToUI(3, "Bluetooth error");
+					}
+				} catch (IOException | InterruptedException e) {
+					sendToUI(2, "ƒÆvyko klaida. IOException | Interupted");	
+					reconnect();
+					e.printStackTrace();
+				}
+			}
+		};
+		serverHandler.post(r);
+	}
+	
+	private void sendGetWawterUnits() throws IOException {
+		final Runnable r = new Runnable() {
+			public void run() {
+				try {
+					while (server_state != 1) {
+						sleep(200);
+					}
+					String msg = "GetWaterUnits\n";
+					if (mmOutputStream != null) {
+						Log.v("Bluetooth", "Sending...");
+						mmOutputStream.write(msg.getBytes());
+						mmOutputStream.flush();
+						Log.v("Bluetooth", "Sent Get water units");
+						sendToUI(2, "Data Sent");						
+					} else {
+						Log.v("Bluetooth", "No output stream");
+						sendToUI(3, "Bluetooth error");
+					}
+				} catch (IOException | InterruptedException e) {
+					sendToUI(2, "ƒÆvyko klaida. IOException | Interupted");
+					e.printStackTrace();
+				}
+			}
+		};
+		serverHandler.post(r);
+	}
+	
+	private void changeUnits(final String msg) throws IOException {
+		final Runnable r = new Runnable() {
+			public void run() {
+				try {
+					while (server_state != 1) {
+						sleep(200);
+					}
+					if (mmOutputStream != null) {
+						mmOutputStream.write(msg.getBytes());
+						Log.v("Command", "start");
+						sendToUI(2, "Data Sent");
+					} else {
+						Log.v("Bluetooth", "No output stream");
+						sendToUI(3, "Bluetooth error");
+					}
+				} catch (IOException | InterruptedException e) {
+					sendToUI(2, "√Åvyko klaida. IOException | Interupted");
+					e.printStackTrace();
+				}
+			}
+		};
+		serverHandler.post(r);
+	}
+	private void closeBT() throws IOException {
+		stopWorker = true;
+		if (mmOutputStream != null)
+			mmOutputStream.close();
+		if (mmInputStream != null)
+			mmInputStream.close();
+		if (mmSocket != null)
+			mmSocket.close();
+		
+		
+		sendToUI(2, "Bluetooth Closed");
+		server_state = 0;
+		Log.v("Bluetooth", "Closed");
+	}
+
+	// suformuoja prane≈°imƒÖ ir i≈°siunƒçia serveriui
+	public void sendToServer(int what, String msgText) {
+		Bundle b = new Bundle();
+		b.putString("command", msgText);
+		Message msg = new Message();
+		msg.what = what;
+		msg.setData(b);
+		serverHandler.sendMessage(msg);
+	}
 
 	private void findBT() {
 		mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -121,6 +233,7 @@ public class BTConnection extends Thread {
 			} catch (IOException e) {
 				try {
 					Log.d("Bluetooth", "Socket cannot connect");
+					//sendToUI(3, "Bluetooth error8888");
 					closeBT();
 					sleep(2000);
 				} catch (IOException | InterruptedException e1) {
@@ -128,9 +241,9 @@ public class BTConnection extends Thread {
 					e1.printStackTrace();
 				}
 				e.printStackTrace();
-				return; // kai ·vyksta klaida reikia nutraukti metod‡, nes
-						// vÎliau
-						// nustatoma teigiama serverio b˚sena
+				return; // kai ƒØvyksta klaida reikia nutraukti metodƒÖ, nes
+						// vƒóliau
+						// nustatoma teigiama serverio b≈´sena
 			}
 			server_state = 1;
 			Log.v("Bluetooth", "Connected");
@@ -138,6 +251,18 @@ public class BTConnection extends Thread {
 
 		} else {
 			Log.v("Bluetooth", "No bounded device");
+		}
+	}
+	
+	private void reconnect(){
+		try {
+			sendToUI(3, "Bluetooth error");
+			closeBT();
+			connect();
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 
@@ -166,6 +291,7 @@ public class BTConnection extends Thread {
 							mmInputStream.read(packetBytes);
 							for (int i = 0; i < bytesAvailable; i++) {
 								byte b = packetBytes[i];
+//								Log.v("TEST", b+"");
 								if (b == delimiter) {
 									byte[] encodedBytes = new byte[readBufferPosition];
 									System.arraycopy(readBuffer, 0, encodedBytes, 0, encodedBytes.length);
@@ -194,58 +320,20 @@ public class BTConnection extends Thread {
 		Looper.loop();
 	}
 
-	private void sendData() throws IOException {
-		final Runnable r = new Runnable() {
-			public void run() {
-				String msg = "start\n";
-				try {
-					while (server_state != 1) {
-						sleep(200);
-					}
-
-					if (mmOutputStream != null) {
-						mmOutputStream.write(msg.getBytes());
-						Log.v("Command", "start");
-						sendToUI(2, "Data Sent");
-					} else{
-						Log.v("Bluetooth", "No output stream");
-						sendToUI(3, "Bluetooth error");
-					}
-				} catch (IOException | InterruptedException e) {
-					sendToUI(2, "¡vyko klaida. IOException | Interupted");
-					e.printStackTrace();
-				}
-			}
-		};
-		serverHandler.post(r);
-	}
-
-	private void closeBT() throws IOException {
-		stopWorker = true;
-		if (mmOutputStream != null)
-			mmOutputStream.close();
-		if (mmInputStream != null)
-			mmInputStream.close();
-		if (mmSocket != null)
-			mmSocket.close();
-		sendToUI(2, "Bluetooth Closed");		
-		server_state = 0;
-		Log.v("Bluetooth", "Closed");
-	}
-
-	// Metodas tam, kad gautume serverio handler·
+	// Metodas tam, kad gautume serverio handlerƒØ
 	public Handler getHandler() {
 		return serverHandler;
 	}
 
-	// Suformuoja ˛inutÊ ir isiunËia UI
+	// Suformuoja ≈æinutƒô ir i≈°siunƒçia UI
 	private void sendToUI(int what, String msgText) {
 		Bundle b = new Bundle();
 		b.putString("message", msgText);
 		Message msg = new Message();
 		msg.what = what;
 		msg.setData(b);
-		uiHandler.sendMessage(msg);
+		if(uiHandler != null)
+			uiHandler.sendMessage(msg);
 	}
 
 	private boolean setBluetooth(boolean enable) {
@@ -258,4 +346,6 @@ public class BTConnection extends Thread {
 		// No need to change bluetooth state
 		return true;
 	}
+
+
 } // End of BTConnection

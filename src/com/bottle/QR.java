@@ -30,7 +30,6 @@ import android.widget.FrameLayout;
 
 import com.bottle.R;
 
-@SuppressWarnings("deprecation")
 public class QR extends Activity implements OnClickListener {
     public final static String EXTRA_MESSAGE = "message";
 
@@ -77,7 +76,7 @@ public class QR extends Activity implements OnClickListener {
 	public void onClick(View v) {
 		switch(v.getId()) {
 	        case R.id.home:
-	        	finish();
+	        	goHome();
 	        	break;
 		}
 	}
@@ -144,5 +143,9 @@ public class QR extends Activity implements OnClickListener {
 	                autoFocusHandler.postDelayed(doAutoFocus, 1000);
 	            }
 	        };
+    	private void goHome() {
+    		finish();
+    		startActivity(new Intent(QR.this, Main.class));
+    	}	        
 	
 }

@@ -13,20 +13,32 @@ public class UfoBottle extends Application {
     private Map<String, Integer> data;
     
     public static String lang = "en"; // default language
-
+	
+    private BTConnection bt;
+	
     public UfoBottle(){
+		
+    	bt = new BTConnection();
     	prepareCodes(30000);
-    }    
+    }
     
     @Override
     public void onCreate(){
         super.onCreate();
         UfoBottle.context = getApplicationContext();
-        //startService(new Intent(this, ServiceBluetooth.class));        
+        //startService(new Intent(this, ServiceBluetooth.class));
+
+		// Bluetooth
+		bt.start();
+		
     }
     
     public static Context getAppContext() {
         return UfoBottle.context;
+    }
+    
+    public BTConnection getBluetooth() {
+        return bt;
     }
     
     public int getData(String key) {

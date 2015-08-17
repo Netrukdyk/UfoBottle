@@ -29,7 +29,6 @@ import android.widget.VideoView;
 public class Fill extends Activity implements OnClickListener {
 	TextView serverStatus, info;
 	Button home, fill, back, errorDevTryAgain, errorDbTryAgain, successHome;
-	Handler serverHandler;
 	String butKodas;
 	int butLiko;
 	UfoBottle app;
@@ -37,10 +36,14 @@ public class Fill extends Activity implements OnClickListener {
 	VideoView videoView2;
 
 	LinearLayout dev_error_layout, db_error_layout, success;
-	RelativeLayout progress;
-	
-	ImageView[] steps = new ImageView [6];
-	
+	RelativeLayout progress, settings;
+
+	private Button wuMinus, wuPlus, wuSet, wuGet, settingsHome;
+	private TextView wuValue, density;
+	int old, newValue;
+
+	ImageView[] steps = new ImageView[6];
+
 	private BTConnection bt;
 
 	@Override
@@ -51,11 +54,15 @@ public class Fill extends Activity implements OnClickListener {
 		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 		setContentView(R.layout.activity_fill);
 
-		bt = new BTConnection();
+		app = (UfoBottle) UfoBottle.getAppContext();
+		
+//		// Bluetooth
+		bt = app.getBluetooth();
+//		bt.sethandler(uiHandler);
+//		bt.start();
+		
 		bt.sethandler(uiHandler);
-		serverHandler = bt.getHandler();
-		bt.start();
-
+		
 		serverStatus = (TextView) findViewById(R.id.serverStatus); // debug
 		info = (TextView) findViewById(R.id.info);
 
@@ -76,8 +83,8 @@ public class Fill extends Activity implements OnClickListener {
 		dev_error_layout = (LinearLayout) findViewById(R.id.device_error);
 		db_error_layout = (LinearLayout) findViewById(R.id.database_error);
 		success = (LinearLayout) findViewById(R.id.success);
-		
-		progress = (RelativeLayout)findViewById(R.id.progress);
+
+		progress = (RelativeLayout) findViewById(R.id.progress);
 		steps[0] = (ImageView) findViewById(R.id.step1);
 		steps[1] = (ImageView) findViewById(R.id.step2);
 		steps[2] = (ImageView) findViewById(R.id.step3);
@@ -85,10 +92,35 @@ public class Fill extends Activity implements OnClickListener {
 		steps[4] = (ImageView) findViewById(R.id.step5);
 		steps[5] = (ImageView) findViewById(R.id.step6);
 
-		butKodas = getIntent().getStringExtra(QR.EXTRA_MESSAGE);
-		app = (UfoBottle) UfoBottle.getAppContext();
-		butLiko = app.getData(butKodas);
+		settings = (RelativeLayout) findViewById(R.id.settings);
+		density = (TextView) findViewById(R.id.density);
+		wuValue = (TextView) findViewById(R.id.wuValue);
+		wuMinus = (Button) findViewById(R.id.wuMinus);
+		wuPlus = (Button) findViewById(R.id.wuPlus);
+		wuSet = (Button) findViewById(R.id.wuSet);
+		wuGet = (Button) findViewById(R.id.wuGet);
+		settingsHome = (Button) findViewById(R.id.settingsBack);
+
+		bt.sendToServer(1, "GetWaterUnits");
+		old = 390;
+		newValue = old;
 		
+		density.append(getResources().getDisplayMetrics().density+"");
+//		wuValue.setText(newValue + ""); // <-- Read from Device, just skip here
+		wuMinus.setOnClickListener(this);
+		wuPlus.setOnClickListener(this);
+		wuSet.setOnClickListener(this);
+		wuGet.setOnClickListener(this);
+		settingsHome.setOnClickListener(this);
+
+		butKodas = getIntent().getStringExtra(QR.EXTRA_MESSAGE);
+
+		if (butKodas.equals("settings")) {
+			setSettings(true);
+		}
+
+		butLiko = app.getData(butKodas);
+
 		Log.v("FillLiko", String.valueOf(butLiko));
 		if (butLiko <= 0) {
 			if (butLiko == -2) { // -2 = reset
@@ -152,20 +184,34 @@ public class Fill extends Activity implements OnClickListener {
 			switch (msg.what) {
 			case 0:
 				String temp = msg.getData().getString("message");
+
+				if(temp.length() == 3) {
+					wuValue.setText(temp);
+					old = Integer.parseInt(temp);
+					newValue = old;
+					Log.v("WaterUnits read from Deviec", temp);
+				}
 				
-				if (temp.contains("Cycle start"))					setStep(true, 0);
-				else if (temp.contains("start: BOTTLE_ATTACH"))		setStep(true, 1);
-				else if (temp.contains("complete: BOTTLE_ATTACH"))	setStep(true, 2);
-				else if (temp.contains("start: FILL_BOTTLE"))		setStep(true, 3);
-				else if (temp.contains("complete: FILL_BOTTLE"))	setStep(true, 4);
-				else if (temp.contains("start: BOTTLE_DETACH"))		setStep(true, 5);
-				else if (temp.contains("complete: BOTTLE_DETACH"))	setStep(true, 6);
-					
+				if (temp.contains("Begin cycle"))
+					setStep(true, 0);
+				else if (temp.contains("start: BOTTLE_ATTACH"))
+					setStep(true, 1);
+				else if (temp.contains("complete: BOTTLE_ATTACH"))
+					setStep(true, 2);
+				else if (temp.contains("start: FILL_BOTTLE"))
+					setStep(true, 3);
+				else if (temp.contains("complete: FILL_BOTTLE"))
+					setStep(true, 4);
+				else if (temp.contains("start: BOTTLE_DETACH"))
+					setStep(true, 5);
+				else if (temp.contains("complete: BOTTLE_DETACH"))
+					setStep(true, 6);
+
 				// serverStatus.append(temp + "\n");
 				// jei serveris atsiuntë klaidà
 				if (temp.contains("error")) {
 					klaida = true;
-				}				
+				}
 				if (temp != null && temp.contains("complete: BOTTLE_DETACH") && klaida) {
 					setDevError(true);
 					fill.setEnabled(true);
@@ -178,34 +224,26 @@ public class Fill extends Activity implements OnClickListener {
 					Log.v("Fill", "Success");
 					app.setData(butKodas, butLiko - 1);
 					// sendToServer(1, "close");
-					klaida = false;					
-					setSuccess(true);					
+					klaida = false;
+					setSuccess(true);
 					fill.setEnabled(true);
 					setStep(false, 0);
 					return;
 				}
 				break;
 			case 2:
-				// serverStatus.setText(msg.getData().getString("message") + "\n");
+				// serverStatus.setText(msg.getData().getString("message") +
+				// "\n");
 				break;
 			case 3:
+				Log.v("FILL", "EXTRA 3 case" + msg.getData().getString("message"));
 				fill.setEnabled(true);
 				setStep(false, 0);
-				Log.v("FILL", "EXTRA 3 case" + msg.getData().getString("message"));
+//				setDevError(true);
 				break;
 			}
 		};
 	};
-
-	// suformuoja praneðimà ir iðsiunèia serveriui
-	private void sendToServer(int what, String msgText) {
-		Bundle b = new Bundle();
-		b.putString("command", msgText);
-		Message msg = new Message();
-		msg.what = what;
-		msg.setData(b);
-		serverHandler.sendMessage(msg);
-	}
 
 	@Override
 	public void onClick(View v) {
@@ -219,7 +257,7 @@ public class Fill extends Activity implements OnClickListener {
 		case R.id.fill:
 			klaida = false;
 			fill.setEnabled(false);// Disable "Pilti" mygtukà
-			sendToServer(1, "start");
+			bt.sendToServer(1, "start");
 			break;
 		case R.id.try_again_dev:
 			setDevError(false);
@@ -227,9 +265,26 @@ public class Fill extends Activity implements OnClickListener {
 		case R.id.try_again_db:
 			goQR();
 			break;
-		case R.id.home_success:			
+		case R.id.home_success:
 			goHome();
 			break;
+		case R.id.wuMinus:
+			wuValue.setText(--newValue + "");
+			break;
+		case R.id.wuPlus:
+			wuValue.setText(++newValue + "");
+			break;
+		case R.id.wuSet:
+			// Bluetooth command
+			bt.sendToServer(4, "SetWaterUnits "+newValue);
+			old = newValue;
+			Toast.makeText(getApplicationContext(), "Set to " + newValue, Toast.LENGTH_SHORT).show();
+			break;
+		case R.id.wuGet:
+			bt.sendToServer(4, "GetWaterUnits");			
+			break;
+		case R.id.settingsBack:
+			goHome();
 		}
 	}
 
@@ -240,8 +295,9 @@ public class Fill extends Activity implements OnClickListener {
 	private void setDbError(Boolean enable) {
 		db_error_layout.setVisibility((enable) ? LinearLayout.VISIBLE : LinearLayout.GONE);
 	}
+
 	Timer timer;
-	
+
 	private void setSuccess(Boolean enable) {
 		success.setVisibility((enable) ? LinearLayout.VISIBLE : LinearLayout.GONE);
 		if (enable) {
@@ -249,41 +305,48 @@ public class Fill extends Activity implements OnClickListener {
 			this.timer.schedule(new TimerTask() {
 				public void run() {
 					runOnUiThread(new Runnable() {
-					    public void run() {
-					    	goHome();
-					    }
+						public void run() {
+							goHome();
+						}
 					});
 				}
 			}, 15000 /* ms */);
 		}
 	}
-	
+
 	private void setStep(Boolean enable, int step) {
-		progress.setVisibility((enable) ? RelativeLayout.VISIBLE : RelativeLayout.GONE);		
+		progress.setVisibility((enable) ? RelativeLayout.VISIBLE : RelativeLayout.GONE);
 		for (int i = 1; i <= 6; i++) {
-			if(i <= step){
-				steps[i-1].setImageDrawable(getResources().getDrawable(R.drawable.step_green));
+			if (i <= step) {
+				steps[i - 1].setImageDrawable(getResources().getDrawable(R.drawable.step_green));
 			} else {
-				steps[i-1].setImageDrawable(getResources().getDrawable(R.drawable.step));
+				steps[i - 1].setImageDrawable(getResources().getDrawable(R.drawable.step));
 			}
-		}		
+		}
 	}
-	
-	
+
+	private void setSettings(Boolean enable) {
+		settings.setVisibility((enable) ? RelativeLayout.VISIBLE : RelativeLayout.GONE);
+	}
+
 	private void goHome() {
+		if (this.timer != null)
+			this.timer.cancel();
+
+		if (videoView2 != null)
+			videoView2.stopPlayback();
+		//bt.sendToServer(1, "close");
 		
-		if(this.timer != null) this.timer.cancel();
-		
-		if(videoView2 != null) videoView2.stopPlayback();
-		sendToServer(1, "close");
 		finish();
 		startActivity(new Intent(Fill.this, Main.class));
 	}
 
 	private void goQR() {
-		if(videoView2 != null) videoView2.stopPlayback();
-		sendToServer(1, "close");
+		if (videoView2 != null)
+			videoView2.stopPlayback();
+		//bt.sendToServer(1, "close");
 		finish();
 		startActivity(new Intent(Fill.this, QR.class));
 	}
+
 }
